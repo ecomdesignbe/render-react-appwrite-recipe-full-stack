@@ -2,13 +2,13 @@ import React from 'react'
 import { Navigate } from 'react-router-dom'
 import { Client, Account } from 'appwrite'
 
-const client = new Client()
-  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
-
-const account = new Account(client)
-
 function PrivateRoute({ children }) {
+  const client = new Client()
+  client.setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
+
+  const account = new Account(client)
+
   const [isLoggedIn, setIsLoggedIn] = React.useState(null)
 
   React.useEffect(() => {
