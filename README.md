@@ -17,3 +17,8 @@ The goal :
 - Several fields (that can be added) for the ingredients with quantity and name.
 
 - When a recipe is created, you should see it in your dashboard. And you also will have to implement logic in order to chose for how many people you want the quantity of the ingredients to be.
+
+
+https://render-react-appwrite-recipe-full-stack.onrender.com/
+
+- know bugs google auth 
