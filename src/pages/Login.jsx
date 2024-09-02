@@ -29,7 +29,7 @@ function Login() {
 
   const handleGoogleLogin = async () => {
     try {
-      account.createOAuth2Session('google', `${window.location.origin}/dashboard`, `${window.location.origin}/login`);
+      account.createOAuth2Session('google', `${window.location.origin}`, `${window.location.origin}/login`);
     } catch (error) {
       console.error("Erreur lors de la connexion avec Google :", error);
     }
