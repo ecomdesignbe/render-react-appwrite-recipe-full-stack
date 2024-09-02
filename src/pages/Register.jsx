@@ -1,29 +1,33 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Client, Account } from 'appwrite'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Client, Account } from 'appwrite';
+import { useUser } from '../contexts/AuthContext'; // Import du contexte utilisateur
 
 function Register() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const navigate = useNavigate()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const navigate = useNavigate();
+  const { setUser } = useUser(); // Utilisation du contexte pour accéder à setUser
 
-  const client = new Client()
+  const client = new Client();
   client.setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
+        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
 
-  const account = new Account(client)
+  const account = new Account(client);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await account.create('unique()', email, password, name)
-      await account.createEmailPasswordSession(email, password)
-      navigate('/dashboard')
+      await account.create('unique()', email, password, name);
+      await account.createEmailPasswordSession(email, password);
+      const userData = await account.get(); // Récupère les informations utilisateur
+      setUser(userData); // Met à jour l'état utilisateur
+      navigate('/dashboard');
     } catch (error) {
-      console.error("Erreur lors de l'inscription :", error)
+      console.error("Erreur lors de l'inscription :", error);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -67,7 +71,7 @@ function Register() {
         </button>
       </form>
     </div>
-  )
+  );
 }
 
-export default Register
+export default Register;
