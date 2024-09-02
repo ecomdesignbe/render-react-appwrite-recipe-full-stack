@@ -1,62 +1,67 @@
-import React, { useEffect, useState } from 'react'
-import { Client, Databases, Storage } from 'appwrite'
+import React, { useEffect, useState } from 'react';
+import { Client, Databases, Storage } from 'appwrite';
 
 function Dashboard() {
-  const [recipes, setRecipes] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const client = new Client()
-    client.setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-          .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
 
-    const databases = new Databases(client)
-    const storage = new Storage(client)
+    const client = new Client();
+    client.setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+          .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+
+    const databases = new Databases(client);
+    const storage = new Storage(client);
 
     const fetchRecipes = async () => {
       try {
         const response = await databases.listDocuments(
           import.meta.env.VITE_APPWRITE_DATABASE_ID,
           import.meta.env.VITE_APPWRITE_COLLECTION_ID
-        )
+        );
 
         const recipesWithImageUrls = await Promise.all(response.documents.map(async (recipe) => {
-          let imageUrl = '';
+          let imageUrl = '/path-to-default-image.jpg';
           if (recipe.cover) {
             try {
               const file = await storage.getFilePreview(
                 import.meta.env.VITE_APPWRITE_BUCKET_ID,
                 recipe.cover
               );
-              imageUrl = file.href
+              imageUrl = file.href;
             } catch (error) {
-              imageUrl = ''
+              console.error('Erreur lors de la récupération de l\'image :', error);
             }
           }
 
           let ingredients = recipe.ingredients.map(item => {
             const [name, quantity, unit] = item.split('-').map(part => part.trim());
-            return { name, quantity, unit }
-          })
+            return { name, quantity, unit };
+          });
 
           return {
             ...recipe,
             imageURL: imageUrl,
-            ingredients: ingredients
-          }
-        }))
+            ingredients: ingredients,
+          };
+        }));
 
         setRecipes(recipesWithImageUrls);
       } catch (error) {
-        setError('Une erreur est survenue lors de la récupération des recettes.')
+        console.error('Erreur lors de la récupération des recettes :', error);
+        setError('Une erreur est survenue lors de la récupération des recettes.');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchRecipes()
-  }, [])
+    fetchRecipes();
+  }, []);
 
   if (loading) {
     return (
@@ -64,7 +69,7 @@ function Dashboard() {
         <h1 className="mb-8 text-4xl font-extrabold text-gray-900">Votre tableau de bord</h1>
         <p>Chargement des recettes...</p>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -73,7 +78,16 @@ function Dashboard() {
         <h1 className="mb-8 text-4xl font-extrabold text-gray-900">Votre tableau de bord</h1>
         <p className="text-red-500">{error}</p>
       </div>
-    )
+    );
+  }
+
+  if (recipes.length === 0) {
+    return (
+      <div className="p-8 bg-gray-100 min-h-screen">
+        <h1 className="mb-8 text-4xl font-extrabold text-gray-900">Votre tableau de bord</h1>
+        <p>Aucune recette disponible pour le moment.</p>
+      </div>
+    );
   }
 
   return (
@@ -112,7 +126,7 @@ function Dashboard() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;
