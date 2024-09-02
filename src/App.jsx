@@ -7,9 +7,11 @@ import Dashboard from './pages/Dashboard'
 import RecipeForm from './pages/RecipeForm'
 import Navbar from './components/Navbar'
 import PrivateRoute from './components/PrivateRoute'
+import { UserProvider } from './contexts/AuthContext';
 
 function App() {
   return (
+    <UserProvider>
     <div className="min-h-screen bg-gray-100">
       <Navbar />
       <Routes>
@@ -20,6 +22,7 @@ function App() {
         <Route path="/create-recipe" element={<PrivateRoute><RecipeForm /></PrivateRoute>} />
       </Routes>
     </div>
+    </UserProvider>
   )
 }
 

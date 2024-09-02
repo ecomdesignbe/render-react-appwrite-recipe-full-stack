@@ -1,35 +1,39 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Client, Account } from 'appwrite'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Client, Account } from 'appwrite';
+import { useUser } from '../contexts/AuthContext'; // Import du contexte utilisateur
 
 function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const navigate = useNavigate()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const { setUser } = useUser(); // Utilisation du contexte pour accéder à setUser
 
-  const client = new Client()
+  const client = new Client();
   client.setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
+        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
 
-  const account = new Account(client)
+  const account = new Account(client);
 
   const handleLogin = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
       await account.createEmailPasswordSession(email, password);
-      navigate('/dashboard')
+      const userData = await account.get(); // Récupère les informations utilisateur
+      setUser(userData); // Met à jour l'état utilisateur
+      navigate('/dashboard');
     } catch (error) {
-      console.error("Erreur lors de la connexion :", error)
+      console.error("Erreur lors de la connexion :", error);
     }
-  }
+  };
 
   const handleGoogleLogin = async () => {
     try {
-      account.createOAuth2Session('google', `${window.location.origin}/dashboard`, `${window.location.origin}/login`)
+      account.createOAuth2Session('google', `${window.location.origin}/dashboard`, `${window.location.origin}/login`);
     } catch (error) {
-      console.error("Erreur lors de la connexion avec Google :", error)
+      console.error("Erreur lors de la connexion avec Google :", error);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -70,7 +74,7 @@ function Login() {
         </button>
       </form>
     </div>
-  )
+  );
 }
 
-export default Login
+export default Login;
