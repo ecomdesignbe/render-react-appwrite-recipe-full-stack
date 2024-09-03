@@ -1,43 +1,55 @@
-import React, { useState } from 'react'
-import { Client, Databases, Storage } from 'appwrite'
+import React, { useState } from 'react';
+import { Client, Databases, Storage } from 'appwrite';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/AuthContext'; // Importation du contexte utilisateur
 
 function RecipeForm() {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [ingredients, setIngredients] = useState([{ nom: '', quantité: '', unité: '' }])
-  const [coverImage, setCoverImage] = useState(null)
-  const [error, setError] = useState(null)
+  const { user } = useUser(); // Récupère l'utilisateur du contexte
+  const navigate = useNavigate();
 
-  const client = new Client()
-  client.setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
-        .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID)
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [ingredients, setIngredients] = useState([{ nom: '', quantité: '', unité: '' }]);
+  const [coverImage, setCoverImage] = useState(null);
+  const [error, setError] = useState(null);
 
-  const databases = new Databases(client)
-  const storage = new Storage(client)
+  const client = new Client();
+  client
+    .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+    .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+
+  const databases = new Databases(client);
+  const storage = new Storage(client);
 
   const handleAddIngredient = () => {
-    setIngredients([...ingredients, { nom: '', quantité: '', unité: '' }])
-  }
+    setIngredients([...ingredients, { nom: '', quantité: '', unité: '' }]);
+  };
 
   const handleIngredientChange = (index, field, value) => {
-    const newIngredients = [...ingredients]
-    newIngredients[index][field] = value
-    setIngredients(newIngredients)
-  }
+    const newIngredients = [...ingredients];
+    newIngredients[index][field] = value;
+    setIngredients(newIngredients);
+  };
 
   const handleRemoveIngredient = (index) => {
     const newIngredients = ingredients.filter((_, i) => i !== index);
-    setIngredients(newIngredients)
-  }
+    setIngredients(newIngredients);
+  };
 
   const handleFileChange = (e) => {
-    setCoverImage(e.target.files[0])
-  }
+    setCoverImage(e.target.files[0]);
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    let imageId = null
+    // Vérification de l'authentification
+    if (!user) {
+      setError('Vous devez être connecté pour ajouter une recette.');
+      return;
+    }
+
+    let imageId = null;
     if (coverImage) {
       try {
         const imageUpload = await storage.createFile(
@@ -45,26 +57,28 @@ function RecipeForm() {
           'unique()',
           coverImage
         );
-        imageId = imageUpload.$id
+        imageId = imageUpload.$id;
       } catch (uploadError) {
-        setError('Erreur lors du téléchargement de l\'image de couverture')
-        console.error('Erreur de téléchargement :', uploadError)
-        return
+        setError("Erreur lors du téléchargement de l'image de couverture");
+        console.error('Erreur de téléchargement :', uploadError);
+        return;
       }
     }
 
-    const ingredientsArray = ingredients.flatMap(ingredient => 
-      [`Nom : ${ingredient.nom}`, `Quantité : ${ingredient.quantité}`, `Unité : ${ingredient.unité}`]
-    )
+    const ingredientsArray = ingredients.flatMap((ingredient) => [
+      `Nom : ${ingredient.nom}`,
+      `Quantité : ${ingredient.quantité}`,
+      `Unité : ${ingredient.unité}`,
+    ]);
 
     const payload = {
       title,
       description,
       ingredients: ingredientsArray,
       cover: imageId,
-    }
+    };
 
-    console.log("Données envoyées :", payload);
+    console.log('Données envoyées :', payload);
 
     try {
       await databases.createDocument(
@@ -72,30 +86,28 @@ function RecipeForm() {
         import.meta.env.VITE_APPWRITE_COLLECTION_ID,
         'unique()',
         payload
-      )
+      );
 
-      alert('Recette ajoutée avec succès !')
-      window.location.href = '/dashboard'
+      alert('Recette ajoutée avec succès !');
+      navigate('/dashboard'); // Utilisation de navigate pour rediriger sans recharger la page
 
       setTitle('');
-      setDescription('')
-      setIngredients([{ nom: '', quantité: '', unité: '' }])
-      setCoverImage(null)
-      setError(null)
+      setDescription('');
+      setIngredients([{ nom: '', quantité: '', unité: '' }]);
+      setCoverImage(null);
+      setError(null);
     } catch (dbError) {
-      setError('Erreur lors de la création du document')
-      console.error("Erreur de création de document :", dbError)
+      setError('Erreur lors de la création du document');
+      console.error('Erreur de création de document :', dbError);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <form onSubmit={handleSubmit} className="w-full max-w-lg p-8 bg-white rounded shadow-lg">
         <h2 className="mb-6 text-2xl font-bold text-center text-gray-800">Créer une Recette</h2>
-        
-        {error && (
-          <div className="mb-4 text-red-600">{error}</div>
-        )}
+
+        {error && <div className="mb-4 text-red-600">{error}</div>}
 
         <div className="mb-4">
           <label className="block mb-2 text-sm font-semibold text-gray-700">Titre</label>
@@ -107,7 +119,7 @@ function RecipeForm() {
             required
           />
         </div>
-        
+
         <div className="mb-4">
           <label className="block mb-2 text-sm font-semibold text-gray-700">Description</label>
           <textarea
@@ -117,7 +129,7 @@ function RecipeForm() {
             required
           />
         </div>
-        
+
         <div className="mb-4">
           <label className="block mb-2 text-sm font-semibold text-gray-700">Image de couverture</label>
           <input
@@ -126,7 +138,7 @@ function RecipeForm() {
             className="w-full px-4 py-2 bg-white text-black border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
         </div>
-        
+
         <div className="mb-4">
           <label className="block mb-2 text-sm font-semibold text-gray-700">Ingrédients</label>
           {ingredients.map((ingredient, index) => (
@@ -172,7 +184,7 @@ function RecipeForm() {
             Ajouter un ingrédient
           </button>
         </div>
-        
+
         <button
           type="submit"
           className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded hover:bg-blue-700"
@@ -181,7 +193,7 @@ function RecipeForm() {
         </button>
       </form>
     </div>
-  )
+  );
 }
 
-export default RecipeForm
+export default RecipeForm;

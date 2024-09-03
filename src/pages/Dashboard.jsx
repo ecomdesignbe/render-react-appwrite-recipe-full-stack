@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Client, Databases, Storage } from 'appwrite';
+import { useUser } from '../contexts/AuthContext'; // Importation du contexte utilisateur
+import { useNavigate } from 'react-router-dom';
 
 function Dashboard() {
+  const { user } = useUser(); // Récupère l'utilisateur du contexte
+  const navigate = useNavigate();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (window.location.hash) {
-      window.history.replaceState(null, '', window.location.pathname);
+    // Redirige vers la page de connexion si l'utilisateur n'est pas authentifié
+    if (!user) {
+      navigate('/login');
+      return;
     }
 
     const client = new Client();
@@ -61,7 +67,7 @@ function Dashboard() {
     };
 
     fetchRecipes();
-  }, []);
+  }, [user, navigate]);
 
   if (loading) {
     return (
