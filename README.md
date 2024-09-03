@@ -20,5 +20,3 @@ The goal :
 
 
 https://render-react-appwrite-recipe-full-stack.onrender.com/
-
-- know bugs google auth 
